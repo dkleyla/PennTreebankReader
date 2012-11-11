@@ -10,5 +10,4 @@ Penn Treebank Reader
 Details:
 
 1. DefaultTreeModel and DefaultMutableTreeNode are used.
-2. Java code without third-party packages
 2. Test.java provides an example to walk the tree
