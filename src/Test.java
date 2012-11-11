@@ -26,22 +26,68 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Enumeration;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
 
 public class Test {
 
   public static void main(String args[])
       throws IOException {
-    File f = new File("test.ptb");
-    InputStreamReader isr = new InputStreamReader(new FileInputStream(f));
-
-    PennTreeBankReader reader = new PennTreeBankReader(isr);
+    PennTreeBankReader reader = new PennTreeBankReader(new FileInputStream(
+        "test.ptb"));
     while (reader.hasNext()) {
-      TreeBankNode tree = reader.next();
-      System.out.println(tree);
+      TreeModel tree = reader.next();
+      System.out.println(walk(tree));
     }
+  }
+
+  private static String walk(TreeModel tree) {
+    StringBuffer sb = new StringBuffer();
+
+    @SuppressWarnings("unchecked")
+    Enumeration<DefaultMutableTreeNode> itr = ((DefaultMutableTreeNode) tree
+        .getRoot()).preorderEnumeration();
+
+    while (itr.hasMoreElements()) {
+      DefaultMutableTreeNode tn = itr.nextElement();
+      // add prefix
+      for (TreeNode p : tn.getPath()) {
+        // if parent has sibling node
+        if (p == tn) {
+          ;
+        } else if (hasNextSibling((DefaultMutableTreeNode) p)) {
+          sb.append("│ ");
+        } else {
+          sb.append("  ");
+        }
+      }
+      // if root has sibling node
+      if (hasNextSibling(tn)) {
+        sb.append("├ ");
+      } else {
+        sb.append("└ ");
+      }
+      PennTreeBankReader.Node data = (PennTreeBankReader.Node) tn
+          .getUserObject();
+      if (tn.isRoot()) {
+        sb.append("\n");
+      } else if (tn.isLeaf()) {
+        sb.append(data.getTag() + " " + data.getWord() + "\n");
+      } else {
+        sb.append(data.getTag() + "\n");
+      }
+
+    }
+
+    return sb.toString();
+  }
+
+  private static boolean hasNextSibling(DefaultMutableTreeNode tn) {
+    return tn.getNextSibling() != null;
   }
 }

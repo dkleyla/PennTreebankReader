@@ -27,15 +27,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
 
 public class PennTreeBankReader {
 
-  InputStreamReader in;
-  TreeBankNode      next;
-  int               currentChar;
+  InputStream in;
+  TreeModel   next;
+  int         currentChar;
 
-  public PennTreeBankReader(InputStreamReader in)
+  public static class Node {
+
+    private final String tag;
+    private final String word;
+
+    public Node(String tag) {
+      this(tag, null);
+    }
+
+    public Node(String tag, String word) {
+      this.tag = tag;
+      this.word = word;
+    }
+
+    public String getTag() {
+      return tag;
+    }
+
+    public String getWord() {
+      return word;
+    }
+
+    @Override
+    public String toString() {
+      return tag + " " + word;
+    }
+  }
+
+  public PennTreeBankReader(InputStream in)
       throws IOException {
     this.in = in;
     currentChar = nextChar();
@@ -46,9 +78,9 @@ public class PennTreeBankReader {
     return next != null;
   }
 
-  public TreeBankNode next()
+  public TreeModel next()
       throws IOException {
-    TreeBankNode curr = next;
+    TreeModel curr = next;
     next = readNext();
     return curr;
   }
@@ -96,9 +128,10 @@ public class PennTreeBankReader {
 
   }
 
-  private TreeBankNode readNext()
+  private TreeModel readNext()
       throws IOException {
-    TreeBankNode parent = new TreeBankNode();
+
+    DefaultMutableTreeNode parent = new DefaultMutableTreeNode();
 
     int state = 0;
     while (true) {
@@ -106,62 +139,52 @@ public class PennTreeBankReader {
       switch (state) {
       case 0:
         if (s == null) {
-          // throw exception
           return null;
         } else if (s.equals("(")) {
-          TreeBankNode child = new TreeBankNode();
+          DefaultMutableTreeNode child = new DefaultMutableTreeNode();
           parent.add(child);
           parent = child;
           state = 1;
         } else {
-          return null;
+          throw new IllegalArgumentException("the ptb should start with [(]");
         }
         break;
       case 1:
-        if (s == null) {
-          // throw exception
-          return null;
-        } else if (s.equals("(") || s.equals(")")) {
-          // throw exception
-          return null;
+        if (s == null || s.equals("(") || s.equals(")")) {
+          throw new IllegalArgumentException("expecting [tag]");
         } else {
-          parent.tag = s;
+          parent.setUserObject(new Node(s));
           state = 2;
         }
         break;
       case 2:
-        if (s == null) {
-          // throw exception
-          return null;
+        if (s == null || s.equals(")")) {
+          throw new IllegalArgumentException("expecting [(] or [word]");
         } else if (s.equals("(")) {
-          TreeBankNode child = new TreeBankNode();
+          DefaultMutableTreeNode child = new DefaultMutableTreeNode();
           parent.add(child);
           parent = child;
           state = 1;
-        } else if (s.equals(")")) {
-          // throw exception
-          return null;
         } else {
-          parent.word = s;
+          Node obj = (Node) parent.getUserObject();
+          parent.setUserObject(new Node(obj.getTag(), s));
           state = 3;
         }
         break;
       case 3:
         if (s == null) {
-          // throw exception
-          return null;
+          throw new IllegalArgumentException("expecting [(] or [)]");
         }
         if (s.equals(")")) {
           if (parent == null) {
-            // throw exception
-            return null;
+            throw new IllegalArgumentException("too much [)]");
           }
-          parent = parent.getParent();
+          parent = (DefaultMutableTreeNode) parent.getParent();
           if (parent.getParent() == null) {
-            return parent;
+            return new DefaultTreeModel(parent);
           }
         } else if (s.equals("(")) {
-          TreeBankNode child = new TreeBankNode();
+          DefaultMutableTreeNode child = new DefaultMutableTreeNode();
           parent.add(child);
           parent = child;
           state = 1;
