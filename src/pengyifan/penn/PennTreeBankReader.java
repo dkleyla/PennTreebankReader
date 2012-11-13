@@ -132,7 +132,7 @@ public class PennTreeBankReader {
   private TreeModel readNext()
       throws IOException {
 
-    DefaultMutableTreeNode parent = new DefaultMutableTreeNode();
+    DefaultMutableTreeNode parent = new DefaultMutableTreeNode(new Node("ROOT"));
 
     int state = 0;
     while (true) {
