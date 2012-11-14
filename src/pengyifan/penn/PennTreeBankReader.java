@@ -1,4 +1,5 @@
 package pengyifan.penn;
+
 /*-
  * PennTreebankReader PennTreeBankReader.java
  * 
@@ -40,7 +41,7 @@ public class PennTreeBankReader {
   TreeModel   next;
   int         currentChar;
 
-  public static class Node {
+  public static class Node implements PennTreeNode {
 
     private final String tag;
     private final String word;
@@ -54,10 +55,12 @@ public class PennTreeBankReader {
       this.word = word;
     }
 
+    @Override
     public String getTag() {
       return tag;
     }
 
+    @Override
     public String getWord() {
       return word;
     }
@@ -120,8 +123,8 @@ public class PennTreeBankReader {
     currentChar = nextChar();
     while (currentChar != '('
         && currentChar != ')'
-        && currentChar != -1
-        && !Character.isWhitespace(currentChar)) {
+          && currentChar != -1
+          && !Character.isWhitespace(currentChar)) {
       sb.append((char) currentChar);
       currentChar = nextChar();
     }
