@@ -2,9 +2,9 @@ package pengyifan.penn;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -12,28 +12,28 @@ import javax.swing.tree.TreeModel;
 
 public class PennTreeBankReader implements Closeable {
 
-  InputStream in;
-  int         currentChar;
+  Reader reader;
+  int    currentChar;
 
-  public PennTreeBankReader(InputStream in)
+  public PennTreeBankReader(Reader reader)
       throws IOException {
-    this.in = in;
+    this.reader = reader;
     currentChar = nextChar();
   }
 
   public PennTreeBankReader(File file)
       throws IOException {
-    this(new FileInputStream(file));
+    this(new FileReader(file));
   }
 
   public PennTreeBankReader(String filename)
       throws IOException {
-    this(new FileInputStream(filename));
+    this(new FileReader(filename));
   }
 
   private int nextChar()
       throws IOException {
-    return in.read();
+    return reader.read();
   }
 
   private String nextToken()
@@ -150,6 +150,6 @@ public class PennTreeBankReader implements Closeable {
   @Override
   public void close()
       throws IOException {
-    in.close();
+    reader.close();
   }
 }
